@@ -1,6 +1,6 @@
 # computational_methods
 
-# Installation ipynb2pdf dependences
+### Installation ipynb2pdf dependences
 Core deps:
 ```
 sudo apt-get install jupyter-core pandoc
