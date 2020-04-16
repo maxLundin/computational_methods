@@ -97,9 +97,10 @@ def tex2pdf(filename_base, verbose):
 
 
 def main(args):
-    filename = args.filename
-    if not filename.endswith('.ipynb'):
-        filename = f'{filename}.ipynb'
+    path, name = os.path.split(args.filename)
+    if not name.endswith('.ipynb'):
+        name = f'{name}.ipynb'
+    filename = os.path.join(path, name)
     if not os.path.exists(filename):
         print(f'Can\'t open "{filename}". Please, check input file correctness.')
         return
@@ -108,15 +109,17 @@ def main(args):
         shutil.rmtree(TEMP_DIR)
     os.mkdir(TEMP_DIR)
     os.chdir(TEMP_DIR)
-    os.symlink(f'../{filename}', filename)
+    os.symlink(f'../{filename}', name)
 
-    base, ext = get_ext(filename)
+    base, ext = get_ext(name)
     try:
 
         ipynb2tex(base, args.hide_code, args.verbose)
 
-        out_name = os.path.split(args.output or base)[1]
-        print(f'[ipynb2pdf] Converting latex document {base}.tex to {out_name}.pdf')
+        output = args.output or base
+        out_path, out_name = os.path.split(output)
+        out_base = get_ext(out_name)[0]
+        print(f'[ipynb2pdf] Converting latex document {base}.tex to {out_base}.pdf')
 
         tex2pdf(base, args.verbose)
 
@@ -127,8 +130,9 @@ def main(args):
 
     finally:
         os.chdir('..')
-        output = args.output or base
-        os.renames(f'{TEMP_DIR}/{base}.pdf', f'{output}.pdf')
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
+        os.renames(f'{TEMP_DIR}/{base}.pdf', f'{out_path}/{out_name}.pdf')
         shutil.rmtree(TEMP_DIR)
 
 
