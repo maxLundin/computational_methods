@@ -98,9 +98,11 @@ def tex2pdf(filename_base, verbose):
 
 def main(args):
     path, name = os.path.split(args.filename)
+
     if not name.endswith('.ipynb'):
         name = f'{name}.ipynb'
     filename = os.path.join(path, name)
+
     if not os.path.exists(filename):
         print(f'Can\'t open "{filename}". Please, check input file correctness.')
         return
@@ -111,17 +113,18 @@ def main(args):
     os.chdir(TEMP_DIR)
     os.symlink(f'../{filename}', name)
 
-    base, ext = get_ext(name)
+    in_base, in_ext = get_ext(name)
+    output = args.output or in_base
+    out_path, out_name = os.path.split(output)
+    if not out_name.endswith('.pdf'):
+        out_name = f'{out_name}.pdf'
+    output = os.path.join(out_path, out_name)
+
     try:
+        ipynb2tex(in_base, args.hide_code, args.verbose)
 
-        ipynb2tex(base, args.hide_code, args.verbose)
-
-        output = args.output or base
-        out_path, out_name = os.path.split(output)
-        out_base = get_ext(out_name)[0]
-        print(f'[ipynb2pdf] Converting latex document {base}.tex to {out_base}.pdf')
-
-        tex2pdf(base, args.verbose)
+        print(f'[ipynb2pdf] Converting latex document {in_base}.tex to {out_name}')
+        tex2pdf(in_base, args.verbose)
 
         print('[ipynb2pdf] Conversion done!')
 
@@ -130,9 +133,9 @@ def main(args):
 
     finally:
         os.chdir('..')
-        if not os.path.exists(out_path):
+        if out_path and not os.path.exists(out_path):
             os.makedirs(out_path)
-        os.renames(f'{TEMP_DIR}/{base}.pdf', f'{out_path}/{out_name}.pdf')
+        os.renames(f'{TEMP_DIR}/{in_base}.pdf', f'{output}')
         shutil.rmtree(TEMP_DIR)
 
 
